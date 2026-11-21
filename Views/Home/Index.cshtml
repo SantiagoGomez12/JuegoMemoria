@@ -1,0 +1,178 @@
+﻿@model JuegoMemoria.Models.Juego
+
+@{
+    ViewData["Title"] = "Juego de Memoria";
+}
+
+<style>
+            .contenedor {
+                max-width: 650px;
+                margin: 30px auto;
+                text-align: center;
+            }
+
+            .niveles {
+                margin: 20px;
+            }
+
+            .niveles a, .reiniciar {
+                padding: 10px 15px;
+                margin: 5px;
+                background-color: #444;
+                color: white;
+                text-decoration: none;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+            }
+
+            .tablero {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 10px;
+                margin-top: 25px;
+            }
+
+            .carta {
+                height: 90px;
+                font-size: 32px;
+                background-color: #555;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+            }
+
+            .volteada {
+                background-color: white;
+                color: black;
+            }
+
+            .encontrada {
+                background-color: #a5d6a7;
+                cursor: default;
+            }
+
+            .reiniciar {
+                margin-top: 20px;
+            }
+</style>
+
+<div class="contenedor">
+
+    <h1>Juego de Memoria</h1>
+
+       <p>Selecciona un nivel de dificultad:</p>
+
+    <div class="niveles">
+            <a href="/Juego/Index?nivel=Facil">Fácil</a>
+             <a href="/Juego/Index?nivel=Medio">Medio</a>
+            <a href="/Juego/Index?nivel=Dificil">Difícil</a>
+    </div>
+
+    <h3>Nivel: @Model.Level</h3>
+
+            <h3>Intentos: <span id="intentos">0</span></h3>
+
+             <h3>Parejas: <span id="parejas">0</span> / @Model.Parejas</h3>
+
+            <h3>Puntaje: <span id="puntaje">0</span></h3>
+
+    <div class="tablero">
+
+        @foreach (var carta in Model.Cartas)
+        {
+            <button type="button"
+                    class="carta"
+                    data-emoji="@carta">
+                ?
+            </button>
+        }
+
+    </div>
+
+    <h3 id="mensaje"></h3>
+
+    <button class="reiniciar" onclick="location.reload()">
+        Reiniciar juego
+    </button>
+
+</div>
+
+<script>
+            let cartasVolteadas = [];
+                let intentos = 0;
+                let parejas = 0;
+                let puntaje = 0;
+            let bloqueado = false;
+
+    const cartas = document.querySelectorAll(".carta");
+
+    cartas.forEach(carta => {
+
+        carta.addEventListener("click", function () {
+
+            if (bloqueado ||
+                carta.classList.contains("volteada") ||
+                carta.classList.contains("encontrada")) {
+                return;
+            }
+
+            carta.textContent = carta.dataset.emoji;
+            carta.classList.add("volteada");
+
+            cartasVolteadas.push(carta);
+
+            if (cartasVolteadas.length === 2) {
+
+                        intentos++;
+
+                        let primera = cartasVolteadas[0];
+                        let segunda = cartasVolteadas[1];
+
+                        if (primera.dataset.emoji === segunda.dataset.emoji) {
+
+                            primera.classList.add("encontrada");
+                            segunda.classList.add("encontrada");
+
+                            parejas++;
+                            puntaje += 10;
+
+                            cartasVolteadas = [];
+
+                            if (parejas === @Model.Parejas) {
+                                document.getElementById("mensaje").textContent =
+                                    "¡Felicidades! ¡Ganaste el juego!";
+                            }
+
+                        } else {
+
+                            puntaje -= 2;
+
+                            if (puntaje < 0) {
+                                puntaje = 0;
+                            }
+
+                            bloqueado = true;
+
+                            setTimeout(function () {
+
+                                primera.textContent = "?";
+                                segunda.textContent = "?";
+
+                                primera.classList.remove("volteada");
+                                segunda.classList.remove("volteada");
+
+                                cartasVolteadas = [];
+                                bloqueado = false;
+
+                            }, 800);
+                }
+
+                        document.getElementById("intentos").textContent = intentos;
+                        document.getElementById("parejas").textContent = parejas;
+                        document.getElementById("puntaje").textContent = puntaje;
+            }
+        });
+    });
+</script>
